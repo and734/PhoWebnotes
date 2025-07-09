@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,7 +6,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime
 
@@ -26,31 +26,102 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
-class StatusCheck(BaseModel):
+# Note Models
+class Note(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    title: str
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class NoteCreate(BaseModel):
+    title: str
+    content: str
 
-# Add your routes to the router instead of directly to app
+class NoteUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+
+# Note endpoints
+@api_router.get("/notes", response_model=List[Note])
+async def get_notes():
+    """Get all notes"""
+    try:
+        notes = await db.notes.find().sort("updated_at", -1).to_list(1000)
+        return [Note(**note) for note in notes]
+    except Exception as e:
+        logging.error(f"Error fetching notes: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.post("/notes", response_model=Note)
+async def create_note(note_data: NoteCreate):
+    """Create a new note"""
+    try:
+        note_dict = note_data.dict()
+        note_obj = Note(**note_dict)
+        await db.notes.insert_one(note_obj.dict())
+        return note_obj
+    except Exception as e:
+        logging.error(f"Error creating note: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.get("/notes/{note_id}", response_model=Note)
+async def get_note(note_id: str):
+    """Get a specific note by ID"""
+    try:
+        note = await db.notes.find_one({"id": note_id})
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        return Note(**note)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching note: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.put("/notes/{note_id}", response_model=Note)
+async def update_note(note_id: str, note_data: NoteUpdate):
+    """Update an existing note"""
+    try:
+        # Check if note exists
+        existing_note = await db.notes.find_one({"id": note_id})
+        if not existing_note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        
+        # Update only provided fields
+        update_data = {k: v for k, v in note_data.dict().items() if v is not None}
+        update_data["updated_at"] = datetime.utcnow()
+        
+        await db.notes.update_one({"id": note_id}, {"$set": update_data})
+        
+        # Return updated note
+        updated_note = await db.notes.find_one({"id": note_id})
+        return Note(**updated_note)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating note: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.delete("/notes/{note_id}")
+async def delete_note(note_id: str):
+    """Delete a note"""
+    try:
+        result = await db.notes.delete_one({"id": note_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Note not found")
+        return {"message": "Note deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting note: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Health check endpoint
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+    return {"message": "Notes API is running"}
 
 # Include the router in the main app
 app.include_router(api_router)
