@@ -295,6 +295,7 @@ function App() {
             {/* Rich Text Editor */}
             <div className="flex-1 bg-white">
               <ReactQuill
+                ref={quillRef}
                 theme="snow"
                 value={content}
                 onChange={setContent}
