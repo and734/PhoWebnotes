@@ -135,6 +135,11 @@ function App() {
   // Load notes on component mount
   useEffect(() => {
     fetchNotes();
+    
+    // Register custom icons for undo/redo
+    const icons = Quill.import('ui/icons');
+    icons['undo'] = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="6 10 4 12 2 10 2 11 6 15 6 11 10 11 10 9 6 9 6 10"/><path class="ql-stroke" d="m10.5,9c2.42,0 4.5,1.79 4.5,4s-2.08,4-4.5,4h-4"/></svg>';
+    icons['redo'] = '<svg viewBox="0 0 18 18"><polygon class="ql-fill ql-stroke" points="12 10 14 12 16 10 16 11 12 15 12 11 8 11 8 9 12 9 12 10"/><path class="ql-stroke" d="m7.5,9c-2.42,0-4.5,1.79-4.5,4s2.08,4 4.5,4h4"/></svg>';
   }, [fetchNotes]);
 
   // Create new note
