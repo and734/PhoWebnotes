@@ -35,19 +35,44 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const quillRef = useRef(null);
+
+  // Custom toolbar with undo/redo handlers
+  const undoChange = () => {
+    if (quillRef.current) {
+      quillRef.current.getEditor().history.undo();
+    }
+  };
+  
+  const redoChange = () => {
+    if (quillRef.current) {
+      quillRef.current.getEditor().history.redo();
+    }
+  };
 
   // Rich text editor configuration
   const modules = {
-    toolbar: [
-      ['undo', 'redo'],
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['blockquote', 'code-block'],
-      [{ 'color': [] }, { 'background': [] }],
-      ['link'],
-      ['clean']
-    ],
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['blockquote', 'code-block'],
+        [{ 'color': [] }, { 'background': [] }],
+        ['link'],
+        ['clean'],
+        ['undo', 'redo']
+      ],
+      handlers: {
+        undo: undoChange,
+        redo: redoChange
+      }
+    },
+    history: {
+      delay: 500,
+      maxStack: 100,
+      userOnly: true
+    }
   };
 
   const formats = [
