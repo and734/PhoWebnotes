@@ -1,11 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactQuill from 'react-quill';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './App.css';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Custom undo and redo handlers
+const CustomUndo = () => {
+  return (
+    <svg viewBox="0 0 18 18">
+      <polygon className="ql-fill ql-stroke" points="6 10 4 12 2 10 2 11 6 15 6 11 10 11 10 9 6 9 6 10"/>
+      <path className="ql-stroke" d="m10.5,9c2.42,0 4.5,1.79 4.5,4s-2.08,4-4.5,4h-4"/>
+    </svg>
+  );
+};
+
+const CustomRedo = () => {
+  return (
+    <svg viewBox="0 0 18 18">
+      <polygon className="ql-fill ql-stroke" points="12 10 14 12 16 10 16 11 12 15 12 11 8 11 8 9 12 9 12 10"/>
+      <path className="ql-stroke" d="m7.5,9c-2.42,0-4.5,1.79-4.5,4s2.08,4 4.5,4h4"/>
+    </svg>
+  );
+};
 
 function App() {
   const [notes, setNotes] = useState([]);
