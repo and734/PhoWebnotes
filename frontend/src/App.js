@@ -52,22 +52,15 @@ function App() {
 
   // Rich text editor configuration
   const modules = {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['blockquote', 'code-block'],
-        [{ 'color': [] }, { 'background': [] }],
-        ['link'],
-        ['clean'],
-        ['undo', 'redo']
-      ],
-      handlers: {
-        undo: undoChange,
-        redo: redoChange
-      }
-    },
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['blockquote', 'code-block'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['link'],
+      ['clean']
+    ],
     history: {
       delay: 500,
       maxStack: 100,
