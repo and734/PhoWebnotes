@@ -20,6 +20,7 @@ function App() {
   // Rich text editor configuration
   const modules = {
     toolbar: [
+      ['undo', 'redo'],
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
