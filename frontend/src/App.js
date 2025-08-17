@@ -85,7 +85,7 @@ function App() {
         clearTimeout(saveTimeout);
       }
     };
-  }, [title, content, autoSave, saveTimeout, selectedNote]);
+  }, [title, content, autoSave, selectedNote]);
 
   // Load notes on component mount
   useEffect(() => {
